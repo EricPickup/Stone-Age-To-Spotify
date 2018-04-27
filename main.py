@@ -62,6 +62,7 @@ def checkForMusicFolder():
 def scrapeSongs():
 	#Gather list of files in Music directory
 	files = os.listdir("Music")
+	
 	songs = []
 
 	for song in files:
@@ -88,16 +89,30 @@ def scrapeSongs():
 		else:
 			title = song
 
-		title = stripTitle(title)
-
+		#If the audio file contains the artist metadata, store it in the object
 		if ('artist' in audio):
-			currentSong = Song(title, currentFilePath, audio['artist'])
+			currentSong = Song(title, currentFilePath, audio['artist'][0])
 		else:
 			currentSong = Song(title, currentFilePath, '')
 
 		songs.append(currentSong)
 
 	return songs
+
+
+def findMatch(sp, song):
+	results = sp.search(q='track:' + song.title, limit=1, type='track')
+	if results['tracks']['items']:
+		print("Found song:")
+		track = results['tracks']['items'][0]
+		print("Track URI: ", track['uri'])
+		print("Title: ", track['name'])
+		print("Artist: ", track['artists'][0]['name'])
+	else:
+		print("No song found")
+
+
+
 
 
 def main():
@@ -115,8 +130,18 @@ def main():
 	checkForMusicFolder()
 
 	songs = scrapeSongs()
+
 	for song in songs:
+		song.title = stripTitle(song.title)
+
+	for song in songs:
+		print("############################################")
 		print(song.title)
+		if (song.artist != ''):
+			print(song.artist)
+		print("SPOTIFY: ")
+		findMatch(sp, song)
+		print("############################################")
 
 if  __name__ =='__main__':main()
 
