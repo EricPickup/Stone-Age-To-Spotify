@@ -1,0 +1,2 @@
+To do:
+Remove websites without www. prefix (the fiends are knocking)

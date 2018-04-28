@@ -88,35 +88,53 @@ def scrapeSongs():
 	return songs
 
 
-def findMatch(sp, song):
-	results = sp.search(q='track:' + song.title, limit=15, type='track')
-	matchFlag = 0
-	if results['tracks']['items']:
-		bestTrack = results['tracks']['items'][0]
+def findMatch(sp, localSong):
+
+	results = sp.search(q='track:' + localSong.title, limit=15, type='track')
+	spotifySongs = results['tracks']['items']
+	matched = False
+
+	#If songs were found
+	if spotifySongs:
+		#First results is most likely to be correct, start there
+		matchedSong = spotifySongs[0]
 		artistConfidence = 0.0
-		if (song.artist != ''):
-			for resultSong in results['tracks']['items']:
-				if matchFlag == 1:
+
+		#If the local audio file has an artist name
+		if (localSong.artist != ''):
+			#For every song returned from Spotify
+			for spotifySong in spotifySongs:
+				#If a song was found, break out of loop (couldn't break from a nested loop)
+				if matched == True:
 					break
-				print("Testing for song %s" % resultSong['name'])
-				for artist in resultSong['artists']:
-					artistComparisonConfidence = compareStrings(artist['name'], song.artist)
-					print("\tTrying artist: %s, confidence: %f" % (artist['name'], artistComparisonConfidence))
-					if (artistComparisonConfidence > 0.4):
-						bestTrack = resultSong
-						matchFlag = 1
+
+				#Compare each artist of the spotify song being checked to the local song's artist
+				for spotifyArtist in spotifySong['artists']:
+
+					artistComparisonConfidence = compareStrings(spotifyArtist['name'], localSong.artist)
+
+					#If artist match is a maybe... (40-60% confidence)
+					if (artistComparisonConfidence > 0.4 and artistComparisonConfidence < 0.6):
+						#Check how similar the spotify song title is to the local song title to be sure
+						if (compareStrings(spotifySong['name'], localSong.title) > 0.6):
+							matchedSong = spotifySong
+							matched = True
+							break
+
+					#Otherwise if the artist is most likely correct (>= 60% confidence)
+					elif (artistComparisonConfidence >= 0.6):
+						matchedSong = spotifySong
+						matched = True
 						break
+
+		#If we don't know the artist's name (local file does not have artist), assume first result is correct
 		else:
-			matchFlag = 1
+			matched = True
 		
-	if (matchFlag == 1):
-		print("Found song:")
-		print("Track URI: ", bestTrack['uri'])
-		print("Title: ", bestTrack['name'])
-		print("Artist: ", bestTrack['artists'][0]['name'])
-		return bestTrack['artists'][0]['name']
+	if (matched == True):
+		return matchedSong
 	else:
-		print("match not found")
+		return None
 
 
 def compareStrings(spotifyArtist, songArtist):
@@ -144,12 +162,19 @@ def main():
 		song.title = stripTitle(song.title)
 
 	for song in songs:
-		print("############################################")
-		print(song.title)
+		print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		if (song.artist != ''):
-			print(song.artist)
-		print("SPOTIFY: ")
-		findMatch(sp, song)
+			print("Searching for: %s by %s" % (song.title, song.artist))
+		else:
+			print("Searching for: %s" % song.title)
+		print("SPOTIFY:")
+		match = findMatch(sp, song)
+		if match is None:
+			print("No match found.")
+		else:
+			print("Match found:\nTitle: %s\nAuthor: %s\nSpotify URI: %s" % (match['name'], match['artists'][0]['name'], match['uri']))
+		print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
 		
 
 if  __name__ =='__main__':main()
