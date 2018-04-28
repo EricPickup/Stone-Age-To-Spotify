@@ -1,2 +1,3 @@
 To do:
 Remove websites without www. prefix (the fiends are knocking)
+Remove ft. Artist from song names

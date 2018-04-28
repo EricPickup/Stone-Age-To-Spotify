@@ -127,9 +127,9 @@ def findMatch(sp, localSong):
 						matched = True
 						break
 
-		#If we don't know the artist's name (local file does not have artist), assume first result is correct
-		else:
-			matched = True
+		#If we don't know the artist's name (local file does not have artist), and the song names are similar (>60%), assume correct
+		elif(compareStrings(matchedSong['name'], localSong.title) > 0.6):
+			match = True
 		
 	if (matched == True):
 		return matchedSong
