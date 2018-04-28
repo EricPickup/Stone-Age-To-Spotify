@@ -5,19 +5,7 @@ import json
 import os
 import mutagen
 import re
-
-'''results = sp.search(q='track:' + sys.argv[1], limit=1, type='track')
-
-print("Found song:")
-track = results['tracks']['items'][0]
-print("Track URI: ", track['uri'])
-print("Title: ", track['name'])
-print("Artist: ", track['artists'][0]['name'])
-print("\n\nNOW PLAYING...")
-
-
-uris = [track['uri']]
-sp.start_playback(uris=uris)'''
+from difflib import SequenceMatcher
 
 
 class Song:
@@ -101,17 +89,38 @@ def scrapeSongs():
 
 
 def findMatch(sp, song):
-	results = sp.search(q='track:' + song.title, limit=1, type='track')
+	results = sp.search(q='track:' + song.title, limit=15, type='track')
+	matchFlag = 0
 	if results['tracks']['items']:
+		bestTrack = results['tracks']['items'][0]
+		artistConfidence = 0.0
+		if (song.artist != ''):
+			for resultSong in results['tracks']['items']:
+				if matchFlag == 1:
+					break
+				print("Testing for song %s" % resultSong['name'])
+				for artist in resultSong['artists']:
+					artistComparisonConfidence = compareStrings(artist['name'], song.artist)
+					print("\tTrying artist: %s, confidence: %f" % (artist['name'], artistComparisonConfidence))
+					if (artistComparisonConfidence > 0.4):
+						bestTrack = resultSong
+						matchFlag = 1
+						break
+		else:
+			matchFlag = 1
+		
+	if (matchFlag == 1):
 		print("Found song:")
-		track = results['tracks']['items'][0]
-		print("Track URI: ", track['uri'])
-		print("Title: ", track['name'])
-		print("Artist: ", track['artists'][0]['name'])
+		print("Track URI: ", bestTrack['uri'])
+		print("Title: ", bestTrack['name'])
+		print("Artist: ", bestTrack['artists'][0]['name'])
+		return bestTrack['artists'][0]['name']
 	else:
-		print("No song found")
+		print("match not found")
 
 
+def compareStrings(spotifyArtist, songArtist):
+	return SequenceMatcher(None, spotifyArtist, songArtist).ratio()
 
 
 
@@ -141,7 +150,7 @@ def main():
 			print(song.artist)
 		print("SPOTIFY: ")
 		findMatch(sp, song)
-		print("############################################")
+		
 
 if  __name__ =='__main__':main()
 
