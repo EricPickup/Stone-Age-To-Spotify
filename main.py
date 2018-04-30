@@ -23,11 +23,15 @@ def stripTitle(title):
 		#Removing file extensions (seeks any period (.) followed by any 3 characters - ex: .wma)
 		title = re.sub('\.[a-zA-Z0-9]{3}$', '', title)
 
-		#Removing website likes
-		title = re.sub('www\.[a-zA-Z0-9]*\.[a-zA-Z]{2,3}', '', title)
+		#Removing URLs (preceding www. followed by any characters)
+		title = re.sub('www\.[a-zA-Z0-9-/\.]*', '', title)
+
+		#Removing URLs without preceding www. 
+		title = re.sub('[a-zA-Z0-9-]+\.[a-zA-Z]{2,3}(/[a-zA-Z0-9]*)*', '', title)
 
 		#Replacing all underscores with spaces, ex: Let_It_Be_The_Beatles.mp3 (common with pirated music)
 		title = title.replace('_', ' ')
+		title = title.replace('-', ' ')
 
 		return title
 
@@ -104,9 +108,12 @@ def findMatch(sp, localSong):
 		if (localSong.artist != ''):
 			#For every song returned from Spotify
 			for spotifySong in spotifySongs:
+
 				#If a song was found, break out of loop (couldn't break from a nested loop)
 				if matched == True:
 					break
+
+				print("Testing for: \"%s\" by %s" % (spotifySong['name'], spotifySong['artists'][0]['name']))
 
 				#Compare each artist of the spotify song being checked to the local song's artist
 				for spotifyArtist in spotifySong['artists']:
@@ -129,7 +136,7 @@ def findMatch(sp, localSong):
 
 		#If we don't know the artist's name (local file does not have artist), and the song names are similar (>60%), assume correct
 		elif(compareStrings(matchedSong['name'], localSong.title) > 0.6):
-			match = True
+			matched = True
 		
 	if (matched == True):
 		return matchedSong
