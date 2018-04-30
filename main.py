@@ -35,6 +35,21 @@ def stripTitle(title):
 
 		return title
 
+def stripArtists(artist):
+	#Stripping any features from artist's name (only one artists' match is needed, having multiple in one search decreases matches as we compare to one artist at a time)
+	artist = re.sub('ft\..*$', '', artist)
+	artist = re.sub('Ft\..*$', '', artist)
+	artist = re.sub('feat\..*$', '', artist)
+	artist = re.sub('Feat\..*$', '', artist)
+
+	#Removing URLs (preceding www. followed by any characters)
+	title = re.sub('www\.[a-zA-Z0-9-/\.]*', '', artist)
+	#Removing URLs without preceding www. 
+
+	title = re.sub('[a-zA-Z0-9-]+\.[a-zA-Z]{2,3}(/[a-zA-Z0-9]*)*', '', artist)
+
+	return artist
+
 
 def checkForMusicFolder():
 	#If program directory contains "Music" folder
@@ -63,7 +78,6 @@ def scrapeSongs():
 
 		#If current file is a directory, skip
 		if (os.path.isdir(currentFilePath)):
-			print("***Found incompatible folder: %s" % song)
 			continue
 
 		audio = mutagen.File(currentFilePath, easy=True)
@@ -71,7 +85,6 @@ def scrapeSongs():
 
 		#If current file is not a compatible audio file, skip
 		if (audio is None):
-			print("***Found incompatible file: %s" % song)
 			continue
 		#If the song contains title metadata, use that as song title
 		elif ('title' in audio):
@@ -119,9 +132,10 @@ def findMatch(sp, localSong):
 				for spotifyArtist in spotifySong['artists']:
 
 					artistComparisonConfidence = compareStrings(spotifyArtist['name'], localSong.artist)
+					print("Compared to %s: %f" % (spotifyArtist['name'], artistComparisonConfidence))
 
 					#If artist match is a maybe... (40-60% confidence)
-					if (artistComparisonConfidence > 0.4 and artistComparisonConfidence < 0.6):
+					if (artistComparisonConfidence > 0.45 and artistComparisonConfidence < 0.6):
 						#Check how similar the spotify song title is to the local song title to be sure
 						if (compareStrings(spotifySong['name'], localSong.title) > 0.6):
 							matchedSong = spotifySong
@@ -135,8 +149,11 @@ def findMatch(sp, localSong):
 						break
 
 		#If we don't know the artist's name (local file does not have artist), and the song names are similar (>60%), assume correct
-		elif(compareStrings(matchedSong['name'], localSong.title) > 0.6):
-			matched = True
+		else:
+			for spotifySong in spotifySongs:
+				if compareStrings(spotifySong['name'], localSong.title) > 0.6:
+					matched = True
+					break
 		
 	if (matched == True):
 		return matchedSong
@@ -154,7 +171,7 @@ def main():
 	config = json.load(open('config.json'))
 	username = config["Spotify"]["username"]
 
-	scope = 'user-modify-playback-state'
+	scope = 'user-read-private user-library-modify'
 
 	token = util.prompt_for_user_token(username, scope)
 
@@ -167,8 +184,11 @@ def main():
 
 	for song in songs:
 		song.title = stripTitle(song.title)
+		if (song.title != ''):
+			song.artist = stripArtists(song.artist)
 
 	for song in songs:
+		songsToAdd = []
 		print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		if (song.artist != ''):
 			print("Searching for: %s by %s" % (song.title, song.artist))
@@ -180,6 +200,9 @@ def main():
 			print("No match found.")
 		else:
 			print("Match found:\nTitle: %s\nAuthor: %s\nSpotify URI: %s" % (match['name'], match['artists'][0]['name'], match['uri']))
+			songsToAdd.append(match['uri'])
+			sp.current_user_saved_tracks_add(tracks=songsToAdd)
+
 		print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 		
