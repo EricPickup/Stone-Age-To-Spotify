@@ -14,13 +14,9 @@ I looked for a way to convert my library and found nothing, so I developed my ow
 
 ## Resources
 
-This application uses Spotipy - a lightweight Python library for the Spotify Web API.
+This application uses [Spotipy](http://spotipy.readthedocs.io/en/latest/#) - a lightweight Python library for the Spotify Web API.
 
-[Spotipy]: http://spotipy.readthedocs.io/en/latest/#
-
-The application also uses Mutagen - a Python module used to handle audio metadata.
-
-[Mutagen]: https://mutagen.readthedocs.io/en/latest/
+The application also uses [Mutagen](https://mutagen.readthedocs.io/en/latest/) - a Python module used to handle audio metadata.
 
 ## How it Works
 
