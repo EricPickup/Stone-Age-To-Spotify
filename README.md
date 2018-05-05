@@ -2,11 +2,15 @@
 
 Converts your audio file library to Spotify by scraping your audio files and their metadata to find the equivalent track on Spotify, which is then added to your Spotify library.
 
+## Video
+
+[![YouTube Video](https://img.youtube.com/vi/h2hMfc7zDrY/0.jpg)](https://www.youtube.com/watch?v=h2hMfc7zDrY)
+
 ## Why?
 
 After recently switching to Spotify as my main music provider, I realized that there was no efficient way to convert my old music (downloaded audio files) to Spotify.
 
-Sure, you could drag them into your library, but that would only allow you to listen to them on the device that contained the audio sources and only on the desktop application.
+Sure, you could add them into your local library, but that would only allow you to listen to them on the device that stored the audio sources.
 
 I began searching for each song in my library, one-by-one on Spotify, adding them very slowly. I realized this was very inefficient.
 
@@ -22,7 +26,7 @@ The application also uses [Mutagen](https://mutagen.readthedocs.io/en/latest/) -
 
 On first run, the application will open a URL to authenticate your Spotify account for the application to access your library.
 
-The application will look for a /Music/ folder in the script's directory. If it does not exist, it will create one.
+The application will search for a /Music/ directory in the script's directory. If it does not exist, it will create one.
 
 It will scrape the metadata of each audio file (title, artists). If an audio file does not contain any metadata, it will use the file name as the title.
 
